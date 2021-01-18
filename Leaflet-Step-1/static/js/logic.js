@@ -9,20 +9,43 @@ d3.json(queryUrl, function(data) {
 function createFeatures(eqData) {
 
     function onEachFeature(feature, layer) {
-      layer.bindPopup("<h3>" + feature.properties.mag + "</h3>");
+      layer.bindPopup("<h3>Magnitude: "+ feature.properties.mag +"<br>Depth: "+ feature.geometry.coordinates[2] + "</h3>");
       }
+
+    function getColor(feature) {
+        let depth = feature.geometry.coordinates[2];
+        let color = "#FF0000";
+        if (depth < 10) {
+            color =  "#40B100";
+        } 
+        else if (depth >= 10 && depth <30) {
+            color = "#BFD400";
+        }
+        else if (depth >= 30 && depth <50) {
+            color = "#FFBC00";
+        }
+        else if (depth >= 50 && depth <70) {
+            color = "#FF7600";
+        }
+        else if (depth >= 70 && depth <90) {
+            color = "#FF5800";
+        }
+        else {
+            color = "#FF0000";
+        }
+        return color;
+    }
 
     
     function createOptions(feature) {
         let geojsonMarkerOptions = {
             radius: feature.properties.mag * 5,
-            fillColor: "#ff7800",
             color: "#000",
             weight: 1,
             opacity: 1,
-            fillOpacity: 0.8
+            fillOpacity: 0.8,
+            fillColor: getColor(feature) 
         };
-
         return geojsonMarkerOptions;
 
     }
@@ -32,7 +55,9 @@ function createFeatures(eqData) {
         pointToLayer: function(feature, latlng) {
             return L.circleMarker(latlng,createOptions(feature));
         }
-      });
+    });
+
+    console.log(eqData);
 
     createMap(earthquakes);
 }
