@@ -3,65 +3,59 @@ let queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_we
 
 // send request for the json data
 d3.json(queryUrl, function(data) {
+    // call function to create the markers for each earthquake
     createFeatures(data.features);
 });
 
+// function to return color based on depth of earthquake
+function getColor(depth) {
+    return depth >= 90 ? '#FF0000' :
+        depth >= 70  ? '#FF5800' :
+        depth >= 50  ? '#FF7600' :
+        depth >= 30  ? '#FFBC00' :
+        depth >= 10  ? '#BFD400' :
+                  '#40B100';
+}
+
+// function to create the markers (circles) for each earthquake
 function createFeatures(eqData) {
 
+    // function to create popup for each earthquake
     function onEachFeature(feature, layer) {
       layer.bindPopup("<h3>Magnitude: "+ feature.properties.mag +"<br>Depth: "+ feature.geometry.coordinates[2] + "</h3>");
       }
 
-    function getColor(feature) {
-        let depth = feature.geometry.coordinates[2];
-        let color = "#FF0000";
-        if (depth < 10) {
-            color =  "#40B100";
-        } 
-        else if (depth >= 10 && depth <30) {
-            color = "#BFD400";
-        }
-        else if (depth >= 30 && depth <50) {
-            color = "#FFBC00";
-        }
-        else if (depth >= 50 && depth <70) {
-            color = "#FF7600";
-        }
-        else if (depth >= 70 && depth <90) {
-            color = "#FF5800";
-        }
-        else {
-            color = "#FF0000";
-        }
-        return color;
-    }
-
-    
+    // function to return display options for each circle
     function createOptions(feature) {
         let geojsonMarkerOptions = {
+            // radius is based on magnitude of each earthquake
             radius: feature.properties.mag * 5,
             color: "#000",
             weight: 1,
             opacity: 1,
             fillOpacity: 0.8,
-            fillColor: getColor(feature) 
+            // call funtion to get color based on depth of each earthquake
+            fillColor: getColor(feature.geometry.coordinates[2]) 
         };
         return geojsonMarkerOptions;
 
     }
 
+    // create variable with data for each earthquake
     let earthquakes = L.geoJSON(eqData, {
+        // call function to create popup info
         onEachFeature: onEachFeature,
+        // create circle markers
         pointToLayer: function(feature, latlng) {
+            // call function to create display options for each circle
             return L.circleMarker(latlng,createOptions(feature));
         }
     });
-
-    console.log(eqData);
-
+    // call function to create map, pass the earthquake markers
     createMap(earthquakes);
 }
 
+// function to create the map, is passed the marker data for each earthquake
 function createMap(earthquakes) {
 
     // define base layer
@@ -74,17 +68,17 @@ function createMap(earthquakes) {
       accessToken: API_KEY
     });
     
-    // Define a baseMaps object to hold our base layers
+    // define object to hold base layer(s)
     var baseMaps = {
       "Light Map": lightmap,
     };
   
-    // Create overlay object to hold our overlay layer
+    // define object to hold overlay layer
     var overlayMaps = {
       Earthquakes: earthquakes
     };
   
-    // Create our map, giving it the streetmap and earthquakes layers to display on load
+    // create map
     var myMap = L.map("map", {
       center: [
         37.09, -95.71
@@ -92,11 +86,27 @@ function createMap(earthquakes) {
       zoom: 5,
       layers: [lightmap, earthquakes]
     });
+
+    var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [-10, 10, 30, 50, 70, 90],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(myMap);
+
+
 }
-    // Create a layer control
-    // Pass in our baseMaps and overlayMaps
-    // Add the layer control to the map
-//     L.control.layers(baseMaps, overlayMaps, {
-//       collapsed: false
-//     }).addTo(myMap);
-//   }
+
