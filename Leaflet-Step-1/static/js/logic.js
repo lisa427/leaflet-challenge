@@ -1,11 +1,6 @@
 // store url to retrieve earthquake data
 let queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-// Define a markerSize function that will give each city a different radius based on its population
-function markerSize(mag) {
-    return mag * 20;
-}
-
 // send request for the json data
 d3.json(queryUrl, function(data) {
     createFeatures(data.features);
@@ -17,19 +12,25 @@ function createFeatures(eqData) {
       layer.bindPopup("<h3>" + feature.properties.mag + "</h3>");
       }
 
-    let geojsonMarkerOptions = {
-        radius: 8,
-        fillColor: "#ff7800",
-        color: "#000",
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.8
-    };
+    
+    function createOptions(feature) {
+        let geojsonMarkerOptions = {
+            radius: feature.properties.mag * 5,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        return geojsonMarkerOptions;
+
+    }
 
     let earthquakes = L.geoJSON(eqData, {
         onEachFeature: onEachFeature,
         pointToLayer: function(feature, latlng) {
-            return L.circleMarker(latlng,geojsonMarkerOptions);
+            return L.circleMarker(latlng,createOptions(feature));
         }
       });
 
