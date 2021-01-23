@@ -1,11 +1,21 @@
 // store url to retrieve earthquake data
 let queryUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
+//store url for plate data
+    let plateUrl = "https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json";
+
 // send request for the json data
-d3.json(queryUrl, function(data) {
-    // call function to create the markers for each earthquake
-    createFeatures(data.features);
+d3.json(queryUrl, function(eqRes) {
+    d3.json(plateUrl, function(plateRes) {
+    createFeatures(eqRes.features, plateRes.features)
+    })
+    
 });
+
+
+
+
+
 
 // function to return color based on depth of earthquake
 function getColor(depth) {
@@ -17,8 +27,34 @@ function getColor(depth) {
                 '#40B100';
 }
 
+
+    
+
+    // // send request for the json data
+    // d3.json(plateUrl, function(data) {
+    //     // call function to create the markers for each earthquake
+    //     createPlates(data.features);
+    // });
+
+    // function to create plate boundaries
+    // function createPlates(plateData) {
+
+    //     let myStyle = {
+    //         "color": "#ff7800",
+    //         "weight": 5,
+    //         "opacity": 0.65
+    //     };
+
+    //     let plates = L.geoJSON(plateData, {
+    //         style: myStyle
+    //     });
+    //     return plates;
+
+    // }
+
+
 // function to create the markers (circles) for each earthquake
-function createFeatures(eqData) {
+function createFeatures(eqData, plateData) {
 
     // function to create popup for each earthquake
     function onEachFeature(feature, layer) {
@@ -51,12 +87,25 @@ function createFeatures(eqData) {
             return L.circleMarker(latlng,createOptions(feature));
         }
     });
+
+    let myStyle = {
+        "color": "#ff7800",
+        "weight": 5,
+        "opacity": 0.65
+    };
+
+    let plates = L.geoJSON(plateData, {
+        style: myStyle
+    });
+    
+
+
     // call function to create map, pass the earthquake markers
-    createMap(earthquakes);
+    createMap(earthquakes, plates);
 }
 
 // function to create the map, is passed the marker data for each earthquake
-function createMap(earthquakes) {
+function createMap(earthquakes, plates) {
 
     // define base layer
     let lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
@@ -67,7 +116,27 @@ function createMap(earthquakes) {
       id: "mapbox/light-v10",
       accessToken: API_KEY
     });
-      
+
+    let darkmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+        attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
+        maxZoom: 18,
+        id: "dark-v10",
+        accessToken: API_KEY
+    });
+
+    // define object to hold base layer(s)
+    let baseMaps = {
+        "Light Map": lightmap,
+        "Dark Map": darkmap
+      };
+    
+      // define object to hold overlay layer
+      let overlayMaps = {
+        Earthquakes: earthquakes,
+        Plates: plates
+      };
+  
+     
     // create map
     let myMap = L.map("map", {
       center: [
@@ -77,10 +146,10 @@ function createMap(earthquakes) {
       layers: [lightmap, earthquakes]
     });
 
-    // create legend
+    // create legend for depth
     let legend = L.control({position: 'bottomright'});
 
-    // add legend to map
+    // add depth legend to map
     legend.onAdd = function (map) {
 
         // create div to add legend & add classes
@@ -99,8 +168,13 @@ function createMap(earthquakes) {
         return div;
     };
 
-    // add legend to map
+    // add depth legend to map
     legend.addTo(myMap);
 
-}
+    // add layer control to map
+    L.control.layers(baseMaps, overlayMaps, {
+        collapsed: false
+      }).addTo(myMap);
+    
 
+}
