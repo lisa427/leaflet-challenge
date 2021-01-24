@@ -22,7 +22,7 @@ function createFeatures(eqData) {
 
     // function to create popup for each earthquake
     function onEachFeature(feature, layer) {
-      layer.bindPopup("<h3>Magnitude: "+ feature.properties.mag +"<br>Depth: "+ feature.geometry.coordinates[2] + "</h3>");
+      layer.bindPopup("<h3>Location: "+ feature.properties.place +"<br>Magnitude: "+ feature.properties.mag +"<br>Depth: "+ feature.geometry.coordinates[2] + "</h3>");
     }
 
     // function to return display options for each circle
