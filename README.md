@@ -6,5 +6,5 @@ Using the Javascript library Leaflet, this map shows earthquakes for the past 7 
 ## Leaflet Step 2
 In addition to the earthquake data, this map also shows the tectonic plate boudaries.  The legend is interactive and allows the user to toggle on or off the earthquake markers and the tectonic plate lines.  The user can also choose which type of map to show: grayscale, satellite, or street maps.  
 
-Earthquake data: http://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php
+Earthquake data: http://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php<br>
 Tectonic plate data: https://github.com/fraxen/tectonicplates 
